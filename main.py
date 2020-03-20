@@ -33,16 +33,16 @@ O = np.concatenate((C, C*A, C*A*A), axis=0)
 dimXR = ln.matrix_rank(R)
 dimXNO = 3 - ln.matrix_rank(O)
 
-print("dimensione di XR = ", dimXR)
-print("dimensione di XNO = ", dimXNO)
 
 # trovo una base di XR e una base di XNO
 XR = np.matrix(sy.Matrix(R).columnspace(), dtype=np.float64).T
 XNO = np.matrix(sy.Matrix(O).nullspace(), dtype=np.float64).T
 
+print("dimensione di XR = ", dimXR)
 print("base di XR")
 print(XR)
 
+print("dimensione di XNO = ", dimXNO)
 print("base di XNO")
 print(XNO)
 
@@ -65,8 +65,8 @@ for i in range(np.size(XNO, 1)):
 param = (alpha + beta)
 paramb = param
 
-# costruisco la matrice con la base di XR concatenata alla base di XNO
-# e al vettore nullo --> M = [XR|-XNO|0]
+# costruisco la matrice del sistema con la base di XR concatenata
+# alla base di XNO e al vettore nullo --> M = [XR|-XNO|0]
 M = sy.Matrix(np.concatenate((XR, XNO*(-1), [[0], [0], [0]]), axis=1))
 
 # risolvo il sistema lineare, che restituira' un numero di parametri pari
@@ -102,8 +102,6 @@ i = 0
 while np.size(T, 1) < 3:
     T = np.concatenate((T, np.matrix(np.eye(3))[:, i]), axis=1)
     i += 1
-
-T[1, 1] = -2
 
 print("matrice di cambiamento di base T")
 print(T)
