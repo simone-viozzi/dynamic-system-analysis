@@ -1,0 +1,14 @@
+autopep8
+flake8
+importmagic
+jupyter
+matplotlib
+pep8
+pip-chill
+pydocstyle
+pylint
+python-language-server
+rope
+scipy
+sympy
+yapf
