@@ -25,6 +25,10 @@ A = np.matrix(A)
 B = np.matrix(B)
 C = np.matrix(C)
 
+dimA = A.shape
+dimB = B.shape
+dimC = C.shape
+
 # calcolo le matrici R e O
 R = np.concatenate((B, A*B, A*A*B), axis=1)
 O = np.concatenate((C, C*A, C*A*A), axis=0)
@@ -99,8 +103,8 @@ T = np.concatenate((XR_int_XNO, XR[:, dimXR - dimXR_int_XNO],
                     XNO[:, dimXNO - dimXR_int_XNO]), axis=1)
 
 i = 0
-while np.size(T, 1) < 3:
-    T = np.concatenate((T, np.matrix(np.eye(3))[:, i]), axis=1)
+while np.size(T, 1) < dimA[0]:
+    T = np.concatenate((T, np.matrix(np.eye(dimA[0]))[:, i]), axis=1)
     i += 1
 
 print("matrice di cambiamento di base T")
@@ -118,3 +122,31 @@ print(Bd)
 Cd = C*T
 print("la matrice C decomposta")
 print(Cd)
+
+# ora devo far vedere i diversi sistemi
+
+# sottosistema raggiungibile
+A_rag = Ad[0:dimXR, 0:(dimXR)]
+B_rag = Bd[0:dimXR]
+C_rag = Cd[:, 0:dimXR]
+
+print("il sottosistema raggiungibile è:")
+print("la matrice A del sottosistema raggiungibile")
+print(A_rag)
+print("la matrice B del sottosistema raggiungibile")
+print(B_rag)
+print("la matrice C del sottosistema raggiungibile")
+print(C_rag)
+
+# sottosistema osservabile
+A_oss = Ad[dimXR_int_XNO:dimXR, 0:(dimXR)]
+B_oss = Bd[0:(dimXR)]
+C_oss = Cd[:, 0:(dimXR)]
+
+print("il sottosistema osservabile è:")
+print("la matrice A del sottosistema osservabile")
+print(A_oss)
+print("la matrice B del sottosistema osservabile")
+print(B_oss)
+print("la matrice C del sottosistema osservabile")
+print(C_oss)
