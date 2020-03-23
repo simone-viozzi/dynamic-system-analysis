@@ -4,6 +4,7 @@ import numpy as np
 import fractions
 import numpy.linalg as ln
 import sympy as sy
+
 # setto il print di numpy per stampare le frazioni
 np.set_printoptions(formatter={'all': lambda x:
                     str(fractions.Fraction(x).limit_denominator())})
@@ -19,6 +20,10 @@ B = [[2/3],
 
 C = [0, -1, 1]
 
+# dim = 4
+# A = np.random.random_sample((dim, dim))
+# B = np.random.random_sample((dim, 1))
+# C = np.random.random_sample((1, dim))
 
 # converto le matrici in ndarray
 A = np.matrix(A)
@@ -35,20 +40,31 @@ O = np.concatenate((C, C*A, C*A*A), axis=0)
 
 # calcolo la dimensione di XR e di XNO
 dimXR = ln.matrix_rank(R)
-dimXNO = 3 - ln.matrix_rank(O)
+dimXNO = dimA[0] - ln.matrix_rank(O)
 
 
 # trovo una base di XR e una base di XNO
-XR = np.matrix(sy.Matrix(R).columnspace(), dtype=np.float64).T
-XNO = np.matrix(sy.Matrix(O).nullspace(), dtype=np.float64).T
 
 print("dimensione di XR = ", dimXR)
-print("base di XR")
-print(XR)
+# inizializzo XR ad una colonna vuota nel caso in cui la dimensione sia 0
+XR = np.zeros((dimA[0], 0))
+if not dimXR == 0:
+    XR = np.matrix(sy.Matrix(R).columnspace(), dtype=np.float64).T
+    print("base di XR")
+    print(XR)
+
+print("-"*50)
 
 print("dimensione di XNO = ", dimXNO)
-print("base di XNO")
-print(XNO)
+# inizializzo XNO ad una colonna vuota nel caso in cui la dimensione sia 0
+XNO = np.zeros((dimA[0], 0))
+if not dimXNO == 0:
+    XNO = np.matrix(sy.Matrix(O).nullspace(), dtype=np.float64).T
+    print("base di XNO")
+    print(XNO)
+
+print("-"*50)
+
 
 # calcolo la dimensione di XR + XNO
 dimXR_plus_XNO = ln.matrix_rank(np.concatenate((XR, XNO), axis=1))
@@ -58,38 +74,41 @@ dimXR_int_XNO = dimXR + dimXNO - dimXR_plus_XNO
 print("dimensione di XR intersecato XNO = ", dimXR_int_XNO)
 
 # trovo una base di XR intersecato XNO
+XR_int_XNO = np.zeros((dimA[0], 0))
+if not dimXR_int_XNO == 0:
+    # dichiaro i parametri per il sistema lineare
+    alpha = ()
+    for i in range(np.size(XR, 1)):
+        alpha = alpha + (sy.symbols("alpha" + str(i)),)
+    beta = ()
+    for i in range(np.size(XNO, 1)):
+        beta = beta + (sy.symbols("beta" + str(i)),)
+    param = (alpha + beta)
+    paramb = param
 
-# dichiaro i parametri per il sistema lineare
-alpha = ()
-for i in range(np.size(XR, 1)):
-    alpha = alpha + (sy.symbols("alpha" + str(i)),)
-beta = ()
-for i in range(np.size(XNO, 1)):
-    beta = beta + (sy.symbols("beta" + str(i)),)
-param = (alpha + beta)
-paramb = param
+    # costruisco la matrice del sistema con la base di XR concatenata
+    # alla base di XNO e al vettore nullo --> M = [XR|-XNO|0]
+    M = sy.Matrix(np.concatenate((XR, XNO*(-1), [[0], [0], [0]]), axis=1))
 
-# costruisco la matrice del sistema con la base di XR concatenata
-# alla base di XNO e al vettore nullo --> M = [XR|-XNO|0]
-M = sy.Matrix(np.concatenate((XR, XNO*(-1), [[0], [0], [0]]), axis=1))
+    # risolvo il sistema lineare, che restituira' un numero di parametri pari
+    # alla dimensione del sottospazio XR intersecato XNO
+    (param,) = sy.linsolve(M, param)
 
-# risolvo il sistema lineare, che restituira' un numero di parametri pari
-# alla dimensione del sottospazio XR intersecato XNO
-(param,) = sy.linsolve(M, param)
+    # sostituisco a tutti i parametri 1
+    paramc = []
+    for i in range(len(param)):
+        tmp = param[i]
+        for j in range(len(paramb)):
+            tmp = tmp.subs(paramb[j], 1)
+        paramc.append([tmp])
 
-# sostituisco a tutti i parametri 1
-paramc = []
-for i in range(len(param)):
-    tmp = param[i]
-    for j in range(len(paramb)):
-        tmp = tmp.subs(paramb[j], 1)
-    paramc.append([tmp])
+    # moltiplico la base di XR per il vettore contenente i parametri
+    XR_int_XNO = np.dot(XR, np.array((paramc[:dimXR]), dtype=np.float64))
 
-# moltiplico la base di XR per il vettore contenente i parametri
-XR_int_XNO = np.dot(XR, np.array((paramc[:dimXR]), dtype=np.float64))
+    print("base di XR intersecato XNO")
+    print(XR_int_XNO)
 
-print("base di XR intersecato XNO")
-print(XR_int_XNO)
+print("-"*50)
 
 # costruisco T
 
@@ -99,16 +118,32 @@ print(XR_int_XNO)
 #   - (dimXNO - dimXR_int_XNO) colonne di XNO
 #   - if dim(T) < 3: completamento a base
 
-T = np.concatenate((XR_int_XNO, XR[:, dimXR - dimXR_int_XNO],
-                    XNO[:, dimXNO - dimXR_int_XNO]), axis=1)
+# calcolo il numero di colonne di ogni sottosistema
+n_col_A11 = dimXR_int_XNO
+n_col_A22 = dimXR - dimXR_int_XNO
+n_col_A33 = dimXNO - dimXR_int_XNO
+n_col_A44 = dimA[0] - n_col_A11 - n_col_A22 - n_col_A33
 
-i = 0
-while np.size(T, 1) < dimA[0]:
+# calcolo i limiti di ogni sottosistema per poter suddividere poi
+# la matrice piu' facilmente
+stop_A11 = n_col_A11
+stop_A22 = n_col_A11 + n_col_A22
+stop_A33 = n_col_A11 + n_col_A22 + n_col_A33
+stop_A44 = n_col_A11 + n_col_A22 + n_col_A33 + n_col_A44
+
+# print(stop_A11, stop_A22, stop_A33, stop_A44)
+
+T = np.concatenate((XR_int_XNO, XR[:, 0:n_col_A22],
+                    XNO[:, 0:n_col_A33]), axis=1)
+
+# colplemento a base aggiungendo vettori della base canonica
+for i in range(n_col_A44):
     T = np.concatenate((T, np.matrix(np.eye(dimA[0]))[:, i]), axis=1)
-    i += 1
+
 
 print("matrice di cambiamento di base T")
 print(T)
+print("-"*50)
 
 # devo cabiare base ad A, B, C
 Ad = T.I*A*T
@@ -123,12 +158,16 @@ Cd = C*T
 print("la matrice C decomposta")
 print(Cd)
 
+print("-"*50)
+
+
 # ora devo far vedere i diversi sistemi
 
 # sottosistema raggiungibile
-A_rag = Ad[0:dimXR, 0:(dimXR)]
-B_rag = Bd[0:dimXR]
-C_rag = Cd[:, 0:dimXR]
+rag = np.r_[0:stop_A22]
+A_rag = Ad[tuple(np.meshgrid(rag, rag))].T
+B_rag = Bd[rag]
+C_rag = Cd[:, rag]
 
 print("il sottosistema raggiungibile è:")
 print("la matrice A del sottosistema raggiungibile")
@@ -137,11 +176,16 @@ print("la matrice B del sottosistema raggiungibile")
 print(B_rag)
 print("la matrice C del sottosistema raggiungibile")
 print(C_rag)
+print("-"*50)
+
 
 # sottosistema osservabile
-A_oss = Ad[dimXR_int_XNO:dimXR, 0:(dimXR)]
-B_oss = Bd[0:(dimXR)]
-C_oss = Cd[:, 0:(dimXR)]
+
+# seleziono le colonne necessarie
+oss = np.r_[stop_A11:stop_A22, stop_A33:stop_A44]
+A_oss = Ad[tuple(np.meshgrid(oss, oss))].T
+B_oss = Bd[oss]
+C_oss = Cd[:, oss]
 
 print("il sottosistema osservabile è:")
 print("la matrice A del sottosistema osservabile")
@@ -150,3 +194,40 @@ print("la matrice B del sottosistema osservabile")
 print(B_oss)
 print("la matrice C del sottosistema osservabile")
 print(C_oss)
+print("-"*50)
+
+
+# sottosistema non osservabile
+
+# seleziono le colonne necessarie
+n_oss = np.r_[0:stop_A11, stop_A22:stop_A33]
+A_n_oss = Ad[tuple(np.meshgrid(n_oss, n_oss))].T
+B_n_oss = Bd[n_oss]
+C_n_oss = Cd[:, n_oss]
+
+print("il sottosistema non osservabile è:")
+print("la matrice A del sottosistema non osservabile")
+print(A_n_oss)
+print("la matrice B del sottosistema non osservabile")
+print(B_n_oss)
+print("la matrice C del sottosistema non osservabile")
+print(C_n_oss)
+print("-"*50)
+
+
+# sottosistema raggiungibile e osservabile
+
+# seleziono le colonne necessarie
+rag_oss = np.r_[stop_A11:stop_A22]
+A_rag_oss = Ad[tuple(np.meshgrid(rag_oss, rag_oss))].T
+B_rag_oss = Bd[rag_oss]
+C_rag_oss = Cd[:, rag_oss]
+
+print("il sottosistema raggiungibile e osservabile è:")
+print("la matrice A del sottosistema raggiungibile e osservabile")
+print(A_rag_oss)
+print("la matrice B del sottosistema raggiungibile e osservabile")
+print(B_rag_oss)
+print("la matrice C del sottosistema raggiungibile e osservabile")
+print(C_rag_oss)
+print("-"*50)
