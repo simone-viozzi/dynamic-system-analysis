@@ -7,18 +7,34 @@ import sympy as sy
 
 # setto il print di numpy per stampare le frazioni
 np.set_printoptions(formatter={'all': lambda x:
-                    str(fractions.Fraction(x).limit_denominator())})
+                    str(fractions.Fraction(x).limit_denominator(1000))})
 
 
-A = [[2/3, -4/3, 2],
-     [5/6, 4/3, -2],
-     [5/6, -2/3, 0]]
+def continue_to_elaborate():
+    while(input("you whant to continue? [y/n]") != "y"):
+        pass
+    print()
 
-B = [[2/3],
-     [-2/3],
-     [1/3]]
 
-C = [0, -1, 1]
+# A = [[2/3, -4/3, 2],
+#     [5/6, 4/3, -2],
+#     [5/6, -2/3, 0]]
+
+# B = [[2/3],
+#     [-2/3],
+#     [1/3]]
+
+# C = [0, -1, 1]
+
+A = [[-1, -2/3, 2/3],
+     [-1, 2/3, 1/3],
+     [1/2, -1/3, -5/3]]
+
+B = [[0],
+     [-1],
+     [0]]
+
+C = [1/2, -1, 0]
 
 # dim = 4
 # A = np.random.random_sample((dim, dim))
@@ -43,7 +59,7 @@ dimXR = ln.matrix_rank(R)
 dimXNO = dimA[0] - ln.matrix_rank(O)
 
 
-# trovo una base di XR e una base di XNO
+# trovo una base di XR
 
 print("dimensione di XR = ", dimXR)
 # inizializzo XR ad una colonna vuota nel caso in cui la dimensione sia 0
@@ -54,6 +70,10 @@ if not dimXR == 0:
     print(XR)
 
 print("-"*50)
+continue_to_elaborate()
+
+
+# e una base di XNO
 
 print("dimensione di XNO = ", dimXNO)
 # inizializzo XNO ad una colonna vuota nel caso in cui la dimensione sia 0
@@ -64,6 +84,7 @@ if not dimXNO == 0:
     print(XNO)
 
 print("-"*50)
+continue_to_elaborate()
 
 
 # calcolo la dimensione di XR + XNO
@@ -109,6 +130,8 @@ if not dimXR_int_XNO == 0:
     print(XR_int_XNO)
 
 print("-"*50)
+continue_to_elaborate()
+
 
 # costruisco T
 
@@ -133,8 +156,8 @@ stop_A44 = n_col_A11 + n_col_A22 + n_col_A33 + n_col_A44
 
 # print(stop_A11, stop_A22, stop_A33, stop_A44)
 
-T = np.concatenate((XR_int_XNO, XR[:, 0:n_col_A22],
-                    XNO[:, 0:n_col_A33]), axis=1)
+T = np.concatenate((XR_int_XNO, XR[:, 0:n_col_A22], XNO[:, 0:n_col_A33]),
+                   axis=1)
 
 # colplemento a base aggiungendo vettori della base canonica
 for i in range(n_col_A44):
@@ -144,6 +167,8 @@ for i in range(n_col_A44):
 print("matrice di cambiamento di base T")
 print(T)
 print("-"*50)
+continue_to_elaborate()
+
 
 # devo cabiare base ad A, B, C
 Ad = T.I*A*T
@@ -159,6 +184,7 @@ print("la matrice C decomposta")
 print(Cd)
 
 print("-"*50)
+continue_to_elaborate()
 
 
 # ora devo far vedere i diversi sistemi
@@ -177,6 +203,7 @@ print(B_rag)
 print("la matrice C del sottosistema raggiungibile")
 print(C_rag)
 print("-"*50)
+continue_to_elaborate()
 
 
 # sottosistema osservabile
@@ -195,6 +222,7 @@ print(B_oss)
 print("la matrice C del sottosistema osservabile")
 print(C_oss)
 print("-"*50)
+continue_to_elaborate()
 
 
 # sottosistema non osservabile
@@ -213,6 +241,7 @@ print(B_n_oss)
 print("la matrice C del sottosistema non osservabile")
 print(C_n_oss)
 print("-"*50)
+continue_to_elaborate()
 
 
 # sottosistema raggiungibile e osservabile
@@ -231,3 +260,26 @@ print(B_rag_oss)
 print("la matrice C del sottosistema raggiungibile e osservabile")
 print(C_rag_oss)
 print("-"*50)
+continue_to_elaborate()
+
+
+# secondo esercizio
+print("secondo esercizio:")
+
+# trovo gli autovalori e autovettori
+eigvalue, eigvectors = ln.eig(A)
+eigvectors = np.matrix(eigvectors)
+
+print("gli autovalori sono:")
+for i, l in enumerate(eigvalue):
+    print("λ" + str(i) + " = " + str(fractions.Fraction(l)
+                                     .limit_denominator(1000)))
+
+print("-"*50)
+continue_to_elaborate()
+
+
+print("gli autovettori associati sono:")
+for i in range(dimA[0]):
+    print("autovettore associato all'autovalore λ" + str(i) + ":")
+    print(eigvectors[:, i])
