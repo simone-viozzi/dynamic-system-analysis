@@ -1,0 +1,8 @@
+services:
+  test:
+    image: pyhton_automatica
+    build: .
+    volumes:
+      - './:/root/work/'
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t

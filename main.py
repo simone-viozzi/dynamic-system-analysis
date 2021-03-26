@@ -1,9 +1,11 @@
 
+# %%
 
 import numpy as np
 import fractions
 import numpy.linalg as ln
 import sympy as sy
+import mpmath as mp
 
 # setto il print di numpy per stampare le frazioni
 np.set_printoptions(formatter={'all': lambda x:
@@ -11,30 +13,30 @@ np.set_printoptions(formatter={'all': lambda x:
 
 
 def continue_to_elaborate():
-    while(input("you whant to continue? [y/n]") != "y"):
-        pass
+    #while(input("you whant to continue? [y/n]") != "y"):
+    #    pass
     print()
 
 
-# A = [[2/3, -4/3, 2],
-#     [5/6, 4/3, -2],
-#     [5/6, -2/3, 0]]
+A = [[1, 1/2, -1],
+    [10, 5/2, -8],
+    [4, 1, -3]]
 
-# B = [[2/3],
-#     [-2/3],
-#     [1/3]]
+B = [[1],
+    [2],
+    [2]]
 
-# C = [0, -1, 1]
+C = [-1, 0, 1]
 
-A = [[-1, -2/3, 2/3],
-     [-1, 2/3, 1/3],
-     [1/2, -1/3, -5/3]]
+# A = [[0, 3, 1],
+#      [1, -2, -1],
+#      [0, 3, 1]]
 
-B = [[0],
-     [-1],
-     [0]]
+# B = [[1],
+#      [0],
+#      [1]]
 
-C = [1/2, -1, 0]
+# C = [2, 1, -1]
 
 # dim = 4
 # A = np.random.random_sample((dim, dim))
@@ -58,6 +60,7 @@ O = np.concatenate((C, C*A, C*A*A), axis=0)
 dimXR = ln.matrix_rank(R)
 dimXNO = dimA[0] - ln.matrix_rank(O)
 
+# %%
 
 # trovo una base di XR
 
@@ -65,13 +68,16 @@ print("dimensione di XR = ", dimXR)
 # inizializzo XR ad una colonna vuota nel caso in cui la dimensione sia 0
 XR = np.zeros((dimA[0], 0))
 if not dimXR == 0:
-    XR = np.matrix(sy.Matrix(R).columnspace(), dtype=np.float64).T
+    R_round = sy.nsimplify(sy.Matrix(R),tolerance=1e-10,rational=True)
+
+    columnspace = R_round.columnspace()
+
+    XR = np.matrix(np.array(columnspace).astype(np.float64)[:, :, 0], dtype=np.float64).T
     print("base di XR")
     print(XR)
 
 print("-"*50)
 continue_to_elaborate()
-
 
 # e una base di XNO
 
@@ -79,7 +85,12 @@ print("dimensione di XNO = ", dimXNO)
 # inizializzo XNO ad una colonna vuota nel caso in cui la dimensione sia 0
 XNO = np.zeros((dimA[0], 0))
 if not dimXNO == 0:
-    XNO = np.matrix(sy.Matrix(O).nullspace(), dtype=np.float64).T
+
+    O_round = sy.nsimplify(sy.Matrix(O),tolerance=1e-10,rational=True)
+
+    nullspace = O_round.nullspace()
+
+    XNO = np.matrix(np.array(nullspace).astype(np.float64)[:, :, 0], dtype=np.float64).T
     print("base di XNO")
     print(XNO)
 
@@ -267,8 +278,16 @@ continue_to_elaborate()
 print("secondo esercizio:")
 
 # trovo gli autovalori e autovettori
-eigvalue, eigvectors = ln.eig(A)
-eigvectors = np.matrix(eigvectors)
+
+# %% 
+
+sy_A = sy.nsimplify(sy.Matrix(A),tolerance=1e-10,rational=True)
+
+eigvalue = sy_A.eigenvals()
+eigvalue = np.array(list(eigvalue.keys())).astype(np.float64)
+
+eigvectors = sy_A.eigenvects()
+eigvectors = np.array([a[2] for a in eigvectors]).astype(np.float64)
 
 print("gli autovalori sono:")
 for i, l in enumerate(eigvalue):
@@ -282,4 +301,6 @@ continue_to_elaborate()
 print("gli autovettori associati sono:")
 for i in range(dimA[0]):
     print("autovettore associato all'autovalore λ" + str(i) + ":")
-    print(eigvectors[:, i])
+    print(eigvectors[i, 0])
+
+# %%
